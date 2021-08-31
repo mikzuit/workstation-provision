@@ -1,0 +1,23 @@
+- name: Check if fritzing installed
+  stat:
+    path: "{{ fritzing_path }}"
+  register: result_a
+  tags: fritzing
+
+- name: Check fritzing version
+  ansible.builtin.command: 'apt list --installed | grep fritzing'
+  when: "result_a.stat.exists"
+  register: result_b
+  changed_when: False
+  failed_when: False
+  tags: fritzing
+
+- name: Install or upgrade fritzing if needed
+  block:
+    - name: Installing fritzing
+      apt:
+        name: ["fritzing", "fritzing-data", "fritzing-parts"]
+      when: ansible_distribution == 'Ubuntu'
+
+  when: "not result_a.stat.exists or fritzing_target_version is not defined or fritzing_target_version not in result_b.stdout"
+  tags: fritzing

@@ -1,0 +1,36 @@
+- name: Check if obs_studio installed
+  stat:
+    path: "{{ obs_studio_path }}"
+  register: result_a
+  tags: obs_studio
+
+- name: Check obs_studio version
+  ansible.builtin.command: 'snap find obs-studio'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: obs_studio
+
+- name: Install obs_studio
+  block:
+
+    # - name: Add obs-studio repo
+    #   ansible.builtin.apt_repository:
+    #     repo: 'ppa:obsproject/obs-studio'
+    #     codename: focal
+    #     state: present
+    #     filename: obs-studio
+
+    # - name: Installing obs-studio
+    #   apt:
+    #     name: obs-studio
+    #   when: ansible_distribution == 'Ubuntu'
+
+    - name: install obs-studio snap app
+      community.general.snap:
+        name: obs-studio
+      when: ansible_distribution == 'Ubuntu'
+
+  when: "not result_a.stat.exists or obs_studio_target_version is not defined or obs_studio_target_version not in result_b.stdout"
+  tags: obs_studio

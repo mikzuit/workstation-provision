@@ -1,0 +1,32 @@
+- name: Check if minikube installed
+  stat:
+    path: "{{ minikube_path }}"
+  register: result_a
+  tags: minikube
+
+- name: Check vagrant version
+  ansible.builtin.command: '{{ minikube_path }} version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: minikube
+
+- name: Install minikube
+  block:
+    - name: Download minikube binary
+      get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /tmp/minikube
+    - name: Make file executable
+      ansible.builtin.file:
+        path: /tmp/minikube
+        mode: u+x
+    - name: Exec binary file to install
+      ansible.builtin.shell: install /tmp/minikube /usr/local/bin/minikube > /dev/null 2>&1
+    - name: Remove binary file
+      ansible.builtin.file:
+        path: /tmp/minikube
+        state: absent
+  when: "not result_a.stat.exists or minikube_target_version is not defined or minikube_target_version not in result_b.stdout"
+  tags: minikube

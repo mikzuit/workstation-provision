@@ -1,0 +1,177 @@
+# - name: Set keybindings variable
+#   tags:
+#     - gnome
+#   set_fact:
+#     keybindings:
+#       - name: binding
+#         value: "'<Ctrl><Alt>b'"
+#       - name: command
+#         value: "'x-www-browser'"
+#       - name: name
+#         value: "'Open a browser'"
+#       - name: binding
+#         value: "'<Ctrl><Alt>k'"
+#       - name: command
+#         value: "'xkill'"
+#       - name: name
+#         value: "'Execute xkill'"
+
+# - name: Custom keybindings
+#   tags:
+#     - gnome
+#   dconf:
+#     key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+#     value: "[{% for x in range(keybindings | length // 3) %}
+#     '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom{{ x }}/'
+#     {% if not loop.last %},{% endif %}{% endfor %}]"
+#     become_user: "{{ ansible_user_id }}"
+#     state: present
+
+# - name: Keybindings
+#   tags:
+#     - gnome
+#   dconf:
+#     key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom{{ index//3 }}/{{ item.name }}
+#     value: "{{ item.value }}"
+#     state: present
+#     become_user: "{{ ansible_user_id }}"
+#   loop: "{{ keybindings }}"
+#   loop_control:
+#     index_var: index
+
+# IMPORTANT. this should be set as much numbers as custom keybindings below 
+# Custom Keybinding
+- name: Custom keybindings
+  become_user: "vagrant"
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    value: "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/',
+    '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/',
+    '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/',
+    '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/']"
+    state: present
+  tags:
+    - dconf
+
+# Custom Keybinding Browser
+- name: Keybindings Name for open browser gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/name
+    value: "'Open a browser'"
+    state: present
+
+- name: Keybindings command for open browser gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/command
+    value: "'x-www-browser'"
+    state: present
+
+- name: Keybindings bindings for open browser gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/binding
+    value: "'<Ctrl><Alt>b'"
+    state: present
+
+# Open xkill Keybinding
+- name: Keybindings Name for xkill gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/name
+    value: "'Execute xkill'"
+    state: present
+
+- name: Keybindings command for xkill gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/command
+    value: "'xkill'"
+    state: present
+
+- name: Keybindings bindings for xkill gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/binding
+    value: "'<Ctrl><Alt>k'"
+    state: present
+
+
+# Sound switch to analog Keybinding
+- name: Keybindings Name for audio to analog gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/name
+    value: "'Audio to Analog'"
+    state: present
+
+# Gnome
+
+- name: Keybindings command for audio to analog gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/command
+    value: "'pacmd set-card-profile 0 output:analog-stereo'"
+    state: present
+
+- name: Keybindings bindings for audio to analog gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/binding
+    value: "'<Ctrl><Alt>1'"
+    state: present
+
+- name: Print var user
+  ansible.builtin.debug:
+    msg: User is {{ ansible_user_id }}
+    verbosity: 2
+
+# Sound switch to hdmi Keybinding
+- name: Keybindings Name for audio to hdmi gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/name
+    value: "'Audio to Hdmi'"
+    state: present
+  debugger: always
+
+- name: Keybindings command for audio to hdmi gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/command
+    value: "'pacmd set-card-profile 0 output:hdmi-stereo'"
+    state: present
+  debugger: always
+
+- name: Keybindings bindings for audio to hdmi gnome
+  become_user: "vagrant"
+  tags:
+    - dconf
+  dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/binding
+    value: "'<Ctrl><Alt>2'"
+    state: present
+  debugger: always

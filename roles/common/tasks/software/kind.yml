@@ -1,0 +1,36 @@
+- name: Check if kind installed
+  stat:
+    path: "{{ kind_path }}"
+  register: result_a
+  tags: kind
+
+- name: Check kind version
+  ansible.builtin.command: '{{ kind_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: kind
+# Download package
+# chmod
+# mv
+- name: Install kind
+  block:
+    - name: Downloading kind
+      get_url:
+        url: https://kind.sigs.k8s.io/dl/v0.10.0/kind-linux-amd64
+        dest: /tmp
+
+    - name: Installing by moving kind
+      ansible.builtin.copy:
+        src: /tmp/kind-linux-amd64
+        dest: /usr/local/bin/kind
+        mode: '0755'
+
+    - name: remove kind installer
+      ansible.builtin.file:
+        path: /tmp/kind-linux-amd64
+        state: absent
+
+  when: "not result_a.stat.exists or kind_target_version is not defined or kind_target_version not in result_b.stdout"
+  tags: kind

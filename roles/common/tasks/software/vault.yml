@@ -1,0 +1,32 @@
+- name: Check if vault installed
+  stat:
+    path: "{{ vault_path }}"
+  register: result_a
+  tags: vault
+
+- name: Check vault version
+  ansible.builtin.command: '{{ vault_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: vault
+
+- name: Install or upgrade vault if needed
+  block:
+    - name: Add apt-key for vault
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add apt deb to source list
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ os_release }} main
+        filename: hashicorp
+        state: present
+
+    - name: Install vault
+      apt:
+        name: vault
+  when: "not result_a.stat.exists or vault_target_version is not defined or vault_target_version not in result_b.stdout"
+  tags: vault

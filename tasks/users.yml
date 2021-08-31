@@ -1,0 +1,28 @@
+- name: Print all available facts
+  ansible.builtin.debug:
+    var: ansible_facts
+  tags: [ never, vars ]
+
+- name: create ansible user
+  user:
+    name: ansible
+    system: yes
+  when: "'node-' in ansible_hostname"
+
+- name: copy keyboard_default file
+  copy:
+    src: files/keyboard_default
+    dest: /etc/default/keyboard
+    owner: root
+    group: root
+    mode: 0744
+  when: "'node-' in ansible_hostname"
+
+- name: copy sudoers_ansible file
+  copy:
+    src: files/sudoers_ansible
+    dest: /etc/sudoers.d/ansible
+    owner: root
+    group: root
+    mode: 0400
+  when: "'node-' in ansible_hostname"

@@ -1,0 +1,20 @@
+- name: Check if git-loglive already exist
+  stat:
+    path: /usr/local/bin/git-loglive.sh
+  register: result_a
+# Populate file with content
+- name: Creating a file with content for git-loglive
+  copy:
+    dest: "/usr/local/bin/git-loglive.sh"
+    content: |
+      #!/bin/bash
+      while :
+      do
+        clear
+        git --no-pager log --graph --pretty=oneline --abbrev-commit --decorate --all $*
+        sleep 1
+      done
+    group: '1000'
+    owner: '1000'
+    mode: '0500'
+  when: not result_a.stat.exists

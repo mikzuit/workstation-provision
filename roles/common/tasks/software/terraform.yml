@@ -1,0 +1,32 @@
+- name: Check if terraform installed
+  stat:
+    path: "{{ terraform_path }}"
+  register: result_a
+  tags: terraform
+
+- name: Check terraform version
+  ansible.builtin.command: '{{ terraform_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: terraform
+
+- name: Install or upgrade terraform if needed
+  block:
+    - name: Add apt-key for terraform
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add apt deb to source list
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ os_release }} main
+        filename: hashicorp
+        state: present
+
+    - name: Install terraform
+      apt:
+        name: terraform
+  when: "not result_a.stat.exists or terraform_target_version is not defined or terraform_target_version not in result_b.stdout"
+  tags: terraform

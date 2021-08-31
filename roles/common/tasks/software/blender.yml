@@ -1,0 +1,5 @@
+- name: install snap blender app
+  community.general.snap:
+    name: blender
+    classic: yes
+  when: ansible_distribution == 'Ubuntu'

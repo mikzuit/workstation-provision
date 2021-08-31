@@ -1,0 +1,4 @@
+- name: Installing easytag
+  apt:
+    name: easytag
+  when: ansible_distribution == 'Ubuntu'

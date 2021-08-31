@@ -1,0 +1,15 @@
+- name: download pivpn
+  get_url:
+    url: https://install.pivpn.io
+    dest: /tmp/pivpn-installer.sh
+  when: "'node-1' in ansible_hostname"
+
+- name: install pivpn
+  ansible.builtin.shell: /tmp/pivpn-installer.sh
+  when: "'node-1' in ansible_hostname"
+
+- name: remove pivpn installer
+  ansible.builtin.file:
+    path: /tmp/pivpn-installer.sh
+    state: absent
+  when: "'node-1' in ansible_hostname"

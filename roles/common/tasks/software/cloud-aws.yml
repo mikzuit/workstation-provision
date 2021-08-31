@@ -1,0 +1,41 @@
+- name: Check if aws-cli installed
+  stat:
+    path: "{{ awscli_path }}"
+  register: result_a
+  tags: awscli
+
+- name: Check aws-cli version
+  ansible.builtin.command: '{{ awscli_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: awscli
+
+- name: Install aws-cli
+  block:
+    - name: Downloading aws2 cli
+      get_url:
+        url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+        dest: /tmp
+
+    - name: Unziping aws cli
+      ansible.builtin.unarchive:
+        src: /tmp/awscli-exe-linux-x86_64.zip
+        dest: /tmp
+
+    - name: Run shell to install aws
+      become: yes
+      ansible.builtin.shell: /tmp/aws/install --update
+
+    - name: Remove zip files
+      file:
+        path: /tmp/awscli-exe-linux-x86_64.zip
+        state: absent
+
+    - name: Remove tmp files
+      file:
+        path: /tmp/aws
+        state: absent
+  when: "not result_a.stat.exists or awscli_target_version is not defined or awscli_target_version not in result_b.stdout"
+  tags: awscli

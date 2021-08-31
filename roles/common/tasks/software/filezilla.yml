@@ -1,0 +1,4 @@
+- name: Installing filezilla
+  apt:
+    name: filezilla
+  when: ansible_distribution == 'Ubuntu'

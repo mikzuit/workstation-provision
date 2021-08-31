@@ -1,0 +1,41 @@
+# base=https://github.com/docker/machine/releases/download/v0.16.0 && \
+# curl -L $base/docker-machine-$(uname -s)-$(uname -m) >/tmp/docker-machine && \
+# sudo mv /tmp/docker-machine /usr/bin/docker-machine &&
+# chmod +x /usr/bin/docker-machine
+# sudo chown root:root /usr/bin/docker-machine
+
+- name: Check if docker-machine installed
+  stat:
+    path: "{{ dockermachine_path }}"
+  register: result_a
+  tags: dockermachine
+
+- name: Check docker-machine version
+  ansible.builtin.command: '{{ dockermachine_path }} version'
+  when: "result_a.stat.exists"
+  register: result_b
+  changed_when: False
+  failed_when: False
+  tags: dockermachine
+
+- name: Install or upgrade docker-machine if needed
+  block:
+
+    - name: Installing docker-machine
+      get_url:
+        url: "https://github.com/docker/machine/releases/download/v{{ dockermachine_target_version }}/docker-machine-{{ ansible_system }}-{{ ansible_architecture }}"
+        dest: /tmp
+
+    - name: Installing by moving docker-machine
+      ansible.builtin.copy:
+        src: /tmp/docker-machine-{{ ansible_system }}-{{ ansible_architecture }}
+        dest: /usr/bin/docker-machine
+        mode: '0755'
+
+    - name: remove docker-machine installer
+      ansible.builtin.file:
+        path: /tmp/docker-machine-{{ ansible_system }}-{{ ansible_architecture }}
+        state: absent
+
+  when: "not result_a.stat.exists or dockermachine_target_version is not defined or dockermachine_target_version not in result_b.stdout"
+  tags: dockermachine

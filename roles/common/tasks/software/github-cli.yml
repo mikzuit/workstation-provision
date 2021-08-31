@@ -1,0 +1,38 @@
+- name: Check if github-cli installed
+  stat:
+    path: "{{ gh_path }}"
+  register: result_a
+  tags: gh
+
+- name: Check github-cli version
+  ansible.builtin.command: '{{ gh_path }} version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: gh
+
+- name: Install github-cli
+  block:
+    - name: Add apt-key for github-cli
+      ansible.builtin.apt_key:
+        url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+        state: present
+
+    - name: Add apt source list in a file
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/trusted-gpg.d/githubcli-archive-keyring.gpg] https://cli.github.com/packages {{ os_release }} main
+        filename: githubcli.list
+        state: present
+
+    - name: Installing github-cli
+      apt:
+        name: gh
+      when: ansible_distribution is defined and ansible_distribution == 'Ubuntu'
+
+    - name: Enabled gh bash completion
+      ansible.builtin.shell: eval "$(gh completion -s bash)" > /etc/bash_completion.d/github-cli
+  when: "not result_a.stat.exists or gh_target_version is not defined or gh_target_version not in result_b.stdout"
+  tags: gh
+
+  # Must consider use apt-mark to hold version like 'sudo apt-mark hold kubelet kubeadm kubectl'

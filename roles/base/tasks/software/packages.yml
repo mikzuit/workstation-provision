@@ -1,0 +1,7 @@
+- name: install packages
+  apt:
+    name: [ 'htop', 'nmap', 'nano', 'gedit', 'file', 'tar', 'unzip', 'tmux', 'vim-nox', 'dsniff', 'autoconf', 'locate', 'bash-completion']
+
+- name: install pi packages
+  apt:
+    name: [ 'lm-sensors', 'net-tools', 'gnupg-agent', 'gnupg2', 'apt-utils', 'python3-pip', 'pass', 'cowsay', 'fortune', 'git-review', "sysbench", "ibus-libpinyin"]

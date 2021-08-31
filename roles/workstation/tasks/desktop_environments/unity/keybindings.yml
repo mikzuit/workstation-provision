@@ -1,0 +1,40 @@
+# Always add custom var first
+- name: Custom keybindings
+  become_user: "{{ ansible_user_id }}"
+  dconf:
+    key: /org/canonical/unity/settings-daemon/plugins/media-keys/custom-keybindings
+    value: "['/org/canonical/unity/settings-daemon/plugins/media-keys/custom-keybindings/custom0/']"
+    state: present
+  tags:
+    - dconf
+
+# Launch Xkill Keybinding
+- name: Keybindings Name for xkill unity
+  become_user: "{{ ansible_user_id }}"
+  tags:
+    - dconf
+  dconf:
+    key: /org/canonical/unity/settings-daemon/plugins/media-keys/custom-keybindings/custom0/name
+    value: "'Launch XKill'"
+    state: present
+  debugger: always
+
+- name: Keybindings command for xkill unity
+  become_user: "{{ ansible_user_id }}"
+  tags:
+    - dconf
+  dconf:
+    key: /org/canonical/unity/settings-daemon/plugins/media-keys/custom-keybindings/custom0/command
+    value: "'xkill'"
+    state: present
+  debugger: always
+
+- name: Keybindings bindings for xkill unity
+  become_user: "{{ ansible_user_id }}"
+  tags:
+    - dconf
+  dconf:
+    key: /org/canonical/unity/settings-daemon/plugins/media-keys/custom-keybindings/custom0/binding
+    value: "'<Ctrl><Alt>k'"
+    state: present
+  debugger: always

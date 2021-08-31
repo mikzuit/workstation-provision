@@ -1,0 +1,30 @@
+- name: Check if audacity installed
+  stat:
+    path: "{{ audacity_path }}"
+  register: result_a
+  tags: audacity
+
+- name: Check audacity version
+  ansible.builtin.command: '{{ audacity_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: audacity
+
+- name: Install audacity
+  block:
+
+    - name: Add audacity repo
+      ansible.builtin.apt_repository:
+        repo: 'ppa:ubuntuhandbook1/audacity'
+        codename: focal
+        state: present
+        filename: audacity
+
+    - name: Install Audacity
+      apt:
+        name: audacity
+
+  when: "not result_a.stat.exists or audacity_target_version is not defined or audacity_target_version not in result_b.stdout"
+  tags: audacity

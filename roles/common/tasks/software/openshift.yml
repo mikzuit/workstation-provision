@@ -1,0 +1,166 @@
+- name: Check if openshift installed
+  stat:
+    path: "{{ openshift_path }}"
+  register: result_a
+  tags: openshift
+
+- name: Check openshift version
+  ansible.builtin.command: '{{ openshift_path }} version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: openshift
+  timeout: 10
+
+- name: Install openshift and remove downloaded file
+  block:
+    - name: Create a directory for crc if it does not exist
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/crc"
+        state: directory
+        mode: '0755'
+
+    # - name: Unziping openshift
+    #   ansible.builtin.unarchive:
+    #     src: "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz"
+    #     dest: "{{ lookup('env', 'HOME') }}/crc/"
+    #     remote_src: yes
+
+    # - name: Installing by moving openshift
+    #   ansible.builtin.copy:
+    #     src: "{{ lookup('env', 'HOME') }}/crc/crc-linux-*-amd64/"
+    #     dest: "{{ lookup('env', 'HOME') }}/crc/"
+    #     mode: '0700'
+  
+    # - name: Downloading openshift
+    #   command: "wget -S -P {{ lookup('env', 'HOME') }}/crc/ https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz -o crc-linux-amd64.tar.xz"
+    #   async: "{{ 1 * 60 * 60 }}"
+    #   poll: 10
+    #   register: async_status
+    #   changed_when: >
+    #     async_status.stdout id defined and 'Downloading' in async_status.stdout
+    
+    - name: Downloading openshift (crc)
+      get_url:
+        url: "https://mirror.openshift.com/pub/openshift-v4/clients/crc/latest/crc-linux-amd64.tar.xz"
+        dest: "{{ lookup('env', 'HOME') }}/crc/"
+        mode: '0640'
+      async: "{{ 1 * 60 * 60 }}"
+      poll: 0
+      register: downloading_status
+      changed_when: >
+        async_status.stdout is defined and 'Downloading' in async_status.stdout
+
+    - name:
+      async_status:
+        jid: "{{ downloading_status.ansible_job_id }}"
+      register: downloading_status_result
+      until: downloading_status_result.finished
+      retries: 300
+      delay: 5
+    # - name: Set status_changed based on async_status stout value
+    #   set_fact: >
+    #     status_changed={{ true if 'Downloading' in async_status.stdout else false }}
+
+    - name: Block after downloading openshift
+      block:
+
+        - name: Unziping openshift
+          ansible.builtin.unarchive:
+            src: "{{ lookup('env', 'HOME') }}/crc/crc-linux-amd64.tar.xz"
+            dest: "{{ lookup('env', 'HOME') }}/crc/"
+
+        - name: Installing by moving openshift
+          ansible.builtin.copy:
+            src: "{{ lookup('env', 'HOME') }}/crc/crc-linux-*-amd64/"
+            dest: "{{ lookup('env', 'HOME') }}/crc/"
+            mode: '0700'
+
+        - name: change permissions for openshift folder
+          ansible.builtin.file:
+            path: "{{ lookup('env', 'HOME') }}/crc/"
+            recurse: yes
+            owner: "{{ ansible_user_id }}"
+            group: "{{ ansible_user_id }}"
+
+        - name: Add {{ extra_path }} to PATH
+          lineinfile:
+            path: "{{ lookup('env', 'HOME') }}/.bashrc"
+            regexp: '/^export PATH=$HOME/crc$/'
+            line: 'export PATH=$PATH:$HOME/crc'
+            backrefs: yes
+          when: lookup('file', '/home/vagrant/.bashrc') is not search('^\s*$PATH:$HOME/crc\s*=')
+
+        - name: remove openshift decompress installer
+          ansible.builtin.file:
+            path: "{{ lookup('env', 'HOME') }}/crc/crc-linux-*-amd64"
+            state: absent
+
+        - name: remove openshift compress installer
+          ansible.builtin.file:
+            path: "{{ lookup('env', 'HOME') }}/crc/crc-linux-amd64.tar.xz"
+            state: absent
+
+      when: "downloading_status_result is true"
+      rescue:
+        - name: Print when errors
+          ansible.builtin.debug:
+            msg: "I caugh an error unzipping openshift"
+
+  when: "not result_a.stat.exists or openshift_target_version is not defined or openshift_target_version|string not in result_b.stdout"
+  tags: openshift
+
+
+- name: Check if odo installed
+  stat:
+    path: "{{ odo_path }}"
+  register: result_c
+  tags: openshift
+
+- name: Check odo version
+  ansible.builtin.command: '{{ odo_path }} version'
+  register: result_d
+  when: "result_c.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: openshift
+
+- name: Install odo and remove downloaded file
+  block:
+
+    - name: Create a directory crc for odo if it does not exist
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/crc"
+        state: directory
+        mode: '0744'
+
+    - name: Download odo file
+      get_url:
+        url: https://mirror.openshift.com/pub/openshift-v4/clients/odo/latest/odo-linux-amd64.tar.gz
+        dest: "{{ lookup('env', 'HOME') }}/crc/"
+
+    - name: Unziping odo
+      ansible.builtin.unarchive:
+        src: "{{ lookup('env', 'HOME') }}/crc/odo-linux-amd64.tar.gz"
+        dest: "{{ lookup('env', 'HOME') }}/crc/"
+
+    - name: Installing by moving odo
+      ansible.builtin.copy:
+        src: "{{ lookup('env', 'HOME') }}/crc/odo"
+        dest: "{{ lookup('env', 'HOME') }}/crc/"
+        mode: '0700'
+
+    - name: change permissions for odo file
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/crc/odo"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+
+    - name: remove odo installer
+      ansible.builtin.file:
+        path: "{{ lookup('env', 'HOME') }}/crc/odo-linux-amd64.tar.gz"
+        state: absent
+
+  when: "not result_c.stat.exists or odo_target_version is not defined or odo_target_version|string not in result_d.stdout"
+  tags: openshift

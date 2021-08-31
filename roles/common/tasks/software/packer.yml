@@ -1,0 +1,32 @@
+- name: Check if Packer installed
+  stat:
+    path: "{{ packer_path }}"
+  register: result_a
+  tags: packer
+
+- name: Check Packer version
+  ansible.builtin.command: '{{ packer_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: packer
+
+- name: Install or upgrade packer if needed
+  block:
+    - name: Add apt-key for packer
+      ansible.builtin.apt_key:
+        url: https://apt.releases.hashicorp.com/gpg
+        state: present
+
+    - name: Add apt deb to source list
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://apt.releases.hashicorp.com {{ os_release }} main
+        filename: hashicorp
+        state: present
+
+    - name: Installing packer
+      apt:
+        name: packer
+      when: ansible_distribution == 'Ubuntu'
+  when: "not result_a.stat.exists or packer_target_version is not defined or packer_target_version not in result_b.stdout"

@@ -1,0 +1,4 @@
+- name: install inkscape snap app
+  community.general.snap:
+    name: inkscape
+  when: ansible_distribution == 'Ubuntu'

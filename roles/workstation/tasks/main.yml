@@ -1,0 +1,100 @@
+# Gather all facts or any
+# from facter , provably a
+# good idea is filter to limit
+# this variables
+- name: collect facts returned by facter
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - '!any'
+      - facter
+
+- name: Print var vars
+  debug:
+    var: hostvars[inventory_hostname]
+    verbosity: 4
+
+# Start with openshift in asynchronous mode
+# - include_tasks: ../../roles/common/tasks/software/openshift.yml
+
+# Imported when XDG gnome
+- name: Import appearance when gnome
+  include_tasks: desktop_environments/gnome/appearance.yml
+  when:
+    - ansible_facts['env']['XDG_SESSION_TYPE'] != "tty"
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] is defined and ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "ubuntu:GNOME"
+- name: Import peripherals when gnome
+  include_tasks: desktop_environments/gnome/peripherals.yml
+  when: 
+    - ansible_facts['env']['XDG_SESSION_TYPE'] != "tty"
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] is defined and ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "ubuntu:GNOME")
+- name: Import keybindings when gnome
+  include_tasks: desktop_environments/gnome/keybindings.yml
+  when:
+    - ansible_facts['env']['XDG_SESSION_TYPE'] != "tty" 
+    - ansible_facts['env']['XDG_CURRENT_DESKTOP'] is defined and ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "ubuntu:GNOME")
+
+# Imported when XDG unity
+- name: Import keybindings when unity
+  include_tasks: desktop_environments/unity/keybindings.yml
+  when: 
+  - ansible_facts['env']['XDG_SESSION_TYPE'] != "tty"
+  - ansible_facts['env']['XDG_CURRENT_DESKTOP'] is defined and ansible_facts['env']['XDG_CURRENT_DESKTOP'] == "Unity:Unity7:ubuntu")
+
+- import_tasks: software/packages.yml
+
+## Tools
+- import_tasks: ../../roles/common/tasks/software/hddtemp.yml
+# Music/Videos
+- import_tasks: ../../roles/common/tasks/software/vlc.yml
+- import_tasks: ../../roles/common/tasks/software/spotify.yml
+- import_tasks: ../../roles/common/tasks/software/obs-studio.yml
+- import_tasks: ../../roles/common/tasks/software/easytag.yml
+- import_tasks: ../../roles/common/tasks/software/audacity.yml
+- import_tasks: ../../roles/common/tasks/software/kdenlive.yml
+# Hashicorp
+- import_tasks: ../../roles/common/tasks/software/vault.yml
+- import_tasks: ../../roles/common/tasks/software/terraform.yml
+- import_tasks: ../../roles/common/tasks/software/packer.yml
+- import_tasks: ../../roles/common/tasks/software/vagrant.yml
+# kubernetes/containers
+- import_tasks: ../../roles/common/tasks/software/minikube.yml
+- import_tasks: ../../roles/common/tasks/software/kubectl.yml
+- import_tasks: ../../roles/common/tasks/software/helm.yml
+- import_tasks: ../../roles/common/tasks/software/kind.yml
+- import_tasks: ../../roles/common/tasks/software/docker.yml
+- import_tasks: ../../roles/common/tasks/software/dockercomp.yml
+- import_tasks: ../../roles/common/tasks/software/docker-machine.yml
+# Devs
+- import_tasks: ../../roles/common/tasks/software/vscode.yml
+- import_tasks: ../../roles/common/tasks/software/vscode-insiders.yml
+- import_tasks: ../../roles/common/tasks/software/wireshark.yml
+- import_tasks: ../../roles/common/tasks/software/cloud-aws.yml
+- import_tasks: ../../roles/common/tasks/software/cloud-azure.yml
+- import_tasks: ../../roles/common/tasks/software/cloud-gcp.yml
+- import_tasks: ../../roles/common/tasks/software/git-loglive.yml
+- import_tasks: ../../roles/common/tasks/software/postman.yml
+- import_tasks: ../../roles/common/tasks/software/gparted.yml
+- import_tasks: ../../roles/common/tasks/software/virtualbox.yml
+- import_tasks: ../../roles/common/tasks/software/github-cli.yml
+# Messages/Videoconference
+- import_tasks: ../../roles/common/tasks/software/telegram.yml
+- import_tasks: ../../roles/common/tasks/software/signal.yml
+- import_tasks: ../../roles/common/tasks/software/skype.yml
+- import_tasks: ../../roles/common/tasks/software/zoom.yml
+# Design
+- import_tasks: ../../roles/common/tasks/software/blender.yml
+- import_tasks: ../../roles/common/tasks/software/gimp.yml
+- import_tasks: ../../roles/common/tasks/software/inkscape.yml
+- import_tasks: ../../roles/common/tasks/software/leocad.yml
+# Browser/downloader/ftp
+- import_tasks: ../../roles/common/tasks/software/tor.yml
+- import_tasks: ../../roles/common/tasks/software/google-chrome.yml
+- import_tasks: ../../roles/common/tasks/software/transmission.yml
+- import_tasks: ../../roles/common/tasks/software/deluge.yml
+- import_tasks: ../../roles/common/tasks/software/filezilla.yml
+# Electronic
+- import_tasks: ../../roles/common/tasks/software/fritzing.yml
+- import_tasks: ../../roles/common/tasks/software/arduino.yml
+
+- import_tasks: ../../roles/common/tasks/software/pip-modules.yml

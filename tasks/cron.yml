@@ -1,0 +1,10 @@
+- name: distribution
+  debug: msg="{{ ansible_distribution }}"
+
+- name: install cron job
+  cron:
+    user: ansible
+    name: "ansible provision"
+    minute: "*/10"
+    job: "/usr/local/bin/ansible-pull -o -U https://github.com/mikzuit/workspace-provision.git > /dev/null"
+  when: "'mini-' in ansible_hostname"

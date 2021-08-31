@@ -1,0 +1,29 @@
+- name: Install pip module pip-search
+  pip:
+    name: pip-search
+  tags: pip_modules
+
+- name: Install pip module virtualenv
+  pip:
+    name: virtualenv
+  tags: pip_modules
+
+- name: Install pip module ansible-lint
+  pip:
+    name: ansible-lint
+  tags: pip_modules
+
+- name: Install pip module yamllint
+  pip:
+    name: yamllint
+  tags: pip_modules
+
+- name: Install pip module molecule
+  pip:
+    name: molecule
+  tags: pip_modules
+
+- name: Install pip module molecule[docker]
+  pip:
+    name: molecule[docker]
+  tags: pip_modules

@@ -1,0 +1,47 @@
+- name: Installing required
+  apt:
+    name: povray
+
+- name: Check if leocad installed
+  stat:
+    path: "{{ leocad_path }}"
+  register: result_a
+  tags: leocad
+
+- name: Check leocad version
+  ansible.builtin.command: '{{ leocad_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: leocad
+
+- name: result_a printed
+  ansible.builtin.debug:
+    var: result_a
+    verbosity: 2
+
+- name: result_b printed
+  ansible.builtin.debug:
+    var: result_b
+    verbosity: 2
+
+- name: Install leocad and remove downloaded file
+  block:
+    - name: Download Leocad appImage file
+      get_url:
+        url: https://github.com/leozide/leocad/releases/download/v21.01/LeoCAD-Linux-21.01-x86_64.AppImage
+        dest: /tmp
+
+    - name: Installing by copy Leocad
+      ansible.builtin.copy:
+        src: /tmp/LeoCAD-Linux-21.01-x86_64.AppImage
+        dest: /usr/local/bin/leocad
+        mode: '0755'
+
+    - name: remove Leocad installer
+      ansible.builtin.file:
+        path: /tmp/LeoCAD-Linux-21.01-x86_64.AppImage
+        state: absent
+  when: "not result_a.stat.exists or leocad_target_version is not defined or leocad_target_version|string not in result_b.stdout"
+  tags: leocad

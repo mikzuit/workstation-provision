@@ -1,0 +1,4 @@
+- name: install gimp snap app
+  community.general.snap:
+    name: gimp
+  when: ansible_distribution == 'Ubuntu'

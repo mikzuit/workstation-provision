@@ -1,0 +1,33 @@
+- name: Check if virtualbox installed
+  stat:
+    path: "{{ vboxmanage_path }}"
+  register: result_a
+  tags: virtualbox
+
+- name: Check virtualbox version
+  ansible.builtin.command: '{{ vboxmanage_path }} version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: virtualbox
+
+- name: Install or upgrade virtualbox if needed
+  block:
+    - name: Add oracle key
+      ansible.builtin.apt_key:
+        url:  https://www.virtualbox.org/download/oracle_vbox_2016.asc
+        state: present
+
+    # MISSING CHECK KEY !!!
+    # - name: Add apt source list in a file
+    #   ansible.builtin.apt_repository:
+    #     repo: deb [arch=amd64 signed-by=/etc/apt/trusted-gpg.d/oracle_vbox_2016.asc.gpg] https://download.virtualbox.org/virtualbox/debian stable contrib
+    #     filename: virtualbox
+    #     state: present
+
+    - name: Install virtualbox with apt
+      apt:
+        deb: https://download.virtualbox.org/virtualbox/6.1.26/virtualbox-6.1_6.1.26-145957~Ubuntu~eoan_amd64.deb
+  when: "not result_a.stat.exists or vboxmanage_target_version is not defined or vboxmanage_target_version not in result_b.stdout"
+  tags: virtualbox

@@ -1,0 +1,26 @@
+- name: Check if kdenlive installed
+  stat:
+    path: "{{ kdenlive_path }}"
+  register: result_a
+  tags: kdenlive
+
+- name: Check kdenlive version
+  ansible.builtin.command: '{{ kdenlive_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: kdenlive
+
+- name: Install or upgrade kdenlive if needed
+  block:
+    - name: Add kdenlive repo
+      ansible.builtin.apt_repository:
+        repo: ppa:kdenlive/kdenlive-stable
+        state: present
+        filename: kdenlive
+
+    - name: Installing Kdenlive
+      apt:
+        name: kdenlive
+  when: "not result_a.stat.exists or kdenlive_target_version is not defined or kdenlive_target_version not in result_b.stdout"

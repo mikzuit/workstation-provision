@@ -1,0 +1,32 @@
+- name: Check if tor installed
+  stat:
+    path: "{{ tor_path }}"
+  register: result_a
+  tags: tor
+
+- name: Check tor version
+  ansible.builtin.command: 'cat {{ tor_path }}/tbb_version.json'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: tor
+
+- name: Install or upgrade tor if needed
+  block:
+    - name: Download Tor-browser Installer
+      ansible.builtin.unarchive:
+        src: "https://www.torproject.org/dist/torbrowser/{{ tor_target_version }}/tor-browser-linux64-{{ tor_target_version }}_en-US.tar.xz"
+        dest: /tmp
+        remote_src: yes
+
+    - name: Install tor-browser by Copying
+      ansible.builtin.copy:
+        src: /tmp/tor-browser_en-US
+        dest: /opt/
+        owner: root
+        group: root
+        mode: '0744'
+        force: yes
+  when: "not result_a.stat.exists or tor_target_version is not defined or tor_target_version not in result_b.stdout"
+  tags: tor

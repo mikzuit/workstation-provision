@@ -1,0 +1,3 @@
+- name: install hddtemp
+  apt:
+    name: hddtemp

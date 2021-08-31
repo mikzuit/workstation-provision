@@ -1,0 +1,5 @@
+- name: install skype snap app
+  community.general.snap:
+    name: skype
+    classic: yes
+  when: ansible_distribution == 'Ubuntu'

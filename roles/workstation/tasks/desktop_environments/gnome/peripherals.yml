@@ -1,0 +1,20 @@
+- name: touchpad settings
+  become_user: "{{ ansible_user_id }}"
+  block:
+    - name: Set touchpad speed
+      community.general.dconf:
+        key: "/org/gnome/desktop/peripherals/touchpad/speed"
+        value: "0.9943609022556"
+        state: present
+
+    - name: Set two-finger-scrolling enabled
+      community.general.dconf:
+        key: "/org/gnome/desktop/peripherals/touchpad/two-finger-scrolling-enabled"
+        value: "'true'"
+        state: present
+    
+    - name: Set Pinyin keyboard layout
+      community.general.dconf:
+        key: "/org/gnome/desktop/input-sources/sources"
+        value: "[('xkb', 'es+winkeys'), ('ibus', 'libpinyin')]"
+        state: present

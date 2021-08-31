@@ -1,0 +1,51 @@
+- name: Check if vagrant installed
+  stat:
+    path: "{{ vagrant_path }}"
+  register: result_a
+  tags: vagrant
+
+- name: Check vagrant version
+  ansible.builtin.command: '{{ vagrant_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: vagrant
+
+# - name: Install or upgrade vagrant if needed
+#   block:
+#     - name: Download Vagrant installer file with checksum url (sha256)
+#       get_url:
+#         url: https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_linux_amd64.zip
+#         dest: /tmp
+#         checksum: sha256:https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_SHA256SUMS
+#     - name: Installing Vagrant by unziping
+#       ansible.builtin.unarchive:
+#         src: /tmp/vagrant_2.2.14_linux_amd64.zip
+#         dest: /usr/local/bin
+#         remote_src: yes
+#         owner: root
+#         group: root
+#     - name: Removing vagrant zip file
+#       file:
+#         path: /tmp/vagrant_2.2.14_linux_amd64.zip
+#         state: absent
+#   when: "not result_a.stat.exists or vagrant_target_version is not defined or vagrant_target_version not in result_b.stdout"
+#   tags: vagrant
+
+- name: Install or upgrade vagrant if needed
+  block:
+  - name: Install vagrant
+    apt:
+      name: vagrant
+
+  - name: Enable vagrant autocomplete file with owner and permissions
+    ansible.builtin.copy:
+      src: "/opt/vagrant/embedded/gems/{{ vagrant_target_version }}/gems/vagrant-{{ vagrant_target_version }}/contrib/bash/completion.sh"
+      dest: /etc/bash_completion.d/vagrant
+      owner: root
+      group: root
+      mode: '0644'
+
+  when: "not result_a.stat.exists or vagrant_target_version is not defined or vagrant_target_version not in result_b.stdout"
+  tags: vagrant

@@ -1,0 +1,32 @@
+- name: Check if helm installed
+  stat:
+    path: "{{ helm_path }}"
+  register: result_a
+  tags: helm
+
+- name: Check helm version
+  ansible.builtin.command: '{{ helm_path }} version'
+  when: "result_a.stat.exists"
+  register: result_b
+  changed_when: False
+  failed_when: False
+  tags: helm
+
+- name: Install or upgrade helm if needed
+  block:
+    - name: Add helm key
+      ansible.builtin.apt_key:
+        url: https://baltocdn.com/helm/signing.asc
+        state: present
+
+    - name: Add apt source list in a file
+      ansible.builtin.apt_repository:
+        repo: deb https://baltocdn.com/helm/stable/debian/ all main
+        filename: helm
+        state: present
+
+    - name: Install helm with apt
+      apt:
+        name: helm
+  when: "not result_a.stat.exists or helm_target_version is not defined or helm_target_version not in result_b.stdout"
+  tags: helm

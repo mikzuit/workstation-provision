@@ -1,0 +1,27 @@
+# - name: Check if transmission installed
+#   stat:
+#     path: "{{ transmission_path }}"
+#   register: result_a
+#   tags: transmission
+
+# - name: Check transmission version
+#   ansible.builtin.command: '{{ transmission_path }} --version'
+#   register: result_b
+#   when: "result_a.stat.exists"
+#   changed_when: False
+#   failed_when: False
+#   tags: transmission
+
+# - name: Add repo and Install transmission if need
+#   block:
+#     - name: Add transmission apt source list
+#       ansible.builtin.apt_repository:
+#         repo: ppa:transmissionbt/ppa
+#         filename: transmission-gtk
+#         state: present
+
+#     - name: Install transmission with apt
+#       apt:
+#         name: ['transmission-gtk', 'transmission-cli', 'transmission-common', 'transmission-daemon']
+#   when: "not result_a.stat.exists or transmission_target_version is not defined or transmission_target_version|string not in result_b.stdout"
+#   tags: transmission

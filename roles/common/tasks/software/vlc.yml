@@ -1,0 +1,23 @@
+- name: Check if vlc installed
+  stat:
+    path: "{{ vlc_path }}"
+  register: result_a
+  tags: vlc
+
+- name: Check vlc version
+  ansible.builtin.command: '{{ vlc_path }} --version'
+  when: "result_a.stat.exists"
+  register: result_b
+  changed_when: False
+  failed_when: False
+  tags: vlc
+
+- name: Install or upgrade vlc if needed
+  block:
+    - name: Installing vlc
+      apt:
+        name: vlc
+      when: ansible_distribution == 'Ubuntu'
+
+  when: "not result_a.stat.exists or vlc_target_version is not defined or vlc_target_version not in result_b.stdout"
+  tags: vlc

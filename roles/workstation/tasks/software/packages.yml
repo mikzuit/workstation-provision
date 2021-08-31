@@ -1,0 +1,26 @@
+- name: Add universe and install tweak tool
+  block:
+    # - name: Add apt deb to source list
+    #   apt_repository:
+    #     repo: "{{ item }}"
+    #   loop:
+    #     - "deb http://archive.ubuntu.com/ubuntu/ groovy universe"
+    #     - "deb http://archive.ubuntu.com/ubuntu/ groovy-updates universe"
+    #     - "deb http://security.ubuntu.com/ubuntu/ groovy-security universe"
+    - name: add apt groovy universe
+      ansible.builtin.apt_repository:
+        repo: deb http://archive.ubuntu.com/ubuntu/ groovy universe
+        state: present
+    - name: add apt groovy-updates universe
+      ansible.builtin.apt_repository:
+        repo: deb http://archive.ubuntu.com/ubuntu/ groovy-updates universe
+        state: present
+    - name: add apt groovy-security universe
+      ansible.builtin.apt_repository:
+        repo: deb http://archive.ubuntu.com/ubuntu/ groovy-security universe
+        state: present
+
+    - name: Install tweak tools
+      apt:
+        name: gnome-tweak-tool
+  ignore_errors: false

@@ -1,0 +1,4 @@
+- name: install spotify snap app
+  community.general.snap:
+    name: spotify
+  when: ansible_distribution == 'Ubuntu'

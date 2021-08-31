@@ -1,0 +1,47 @@
+# sudo apt-get remove docker docker-engine docker.io containerd runc
+# sudo apt-get install apt-transport-https ca-certificates curl gnupg
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+#echo \
+#  "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+#  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# post installation steps to use without sudo
+# sudo groupadd docker
+# sudo usermod -aG docker $USER
+# newgrp docker 
+
+# Enable on boot
+# sudo systemctl enable docker.service
+# sudo systemctl enable containerd.service
+
+- name: Check if docker installed
+  stat:
+    path: "{{ docker_path }}"
+  register: result_a
+  tags: docker
+
+- name: Check docker version
+  ansible.builtin.command: '{{ docker_path }} --version'
+  when: "result_a.stat.exists"
+  register: result_b
+  changed_when: False
+  failed_when: False
+  tags: docker
+
+- name: Install or upgrade docker if needed
+  block:
+
+    - name: Add apt-key for github-cli
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        keyring: /etc/apt/trusted.gpg.d/docker-keyring.gpg
+        state: present
+
+    - name: Add apt source list in a file
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64 signed-by=/etc/apt/trusted.gpg.d/docker-keyring.gpg] https://download.docker.com/linux/ubuntu {{ os_release }} stable
+        filename: docker.list
+        state: present
+
+  when: "not result_a.stat.exists or docker_target_version is not defined or docker_target_version not in result_b.stdout"
+  tags: docker

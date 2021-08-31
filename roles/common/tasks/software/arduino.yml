@@ -1,0 +1,44 @@
+- name: Check if arduino installed
+  stat:
+    path: "{{ arduino_path }}"
+  register: result_a
+  tags: arduino
+
+- name: Check arduino version
+  ansible.builtin.command: '{{ arduino_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  failed_when: False
+  # Do I need become here?
+  become: true
+  tags: arduino
+  retries: 10
+
+- name: Install or upgrade arduino if needed
+  block:
+    - name: Download arduino Installer
+      ansible.builtin.unarchive:
+        src: "https://downloads.arduino.cc/arduino-{{ arduino_target_version }}-linux64.tar.xz"
+        dest: /tmp
+        remote_src: yes
+    
+    - name: Check if arduino folder downloaded
+      stat: path=/tmp/arduino-{{ arduino_target_version }}
+      register: arduino_in_temp
+
+    - name: Move arduino folder to opt
+      become_user: root
+      ansible.builtin.command: mv /tmp/arduino-{{ arduino_target_version }}/ /opt/arduino/
+      when: arduino_in_temp.stat.exists
+
+    - name: Install with executable
+      become_user: root
+      ansible.builtin.command: '/opt/arduino/install.sh'
+
+    - name: remove arduino installer
+      ansible.builtin.file:
+        path: /tmp/arduino-{{ arduino_target_version }}
+        state: absent
+
+  when: "not result_a.stat.exists or arduino_target_version is not defined or arduino_target_version not in result_b.stdout"
+  tags: arduino

@@ -1,0 +1,122 @@
+- name: Installing required for kubectl
+  apt:
+    name: ['apt-transport-https', 'ca-certificates', 'gnupg2']
+  tags: k8s
+
+# KUBECTL
+- name: Check if kubectl installed
+  stat:
+    path: "{{ kubectl_path }}"
+  register: result_a
+  tags: k8s
+
+- name: Check kubectl version
+  ansible.builtin.command: '{{ kubectl_path }} version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: k8s
+
+# KUBELET
+- name: Check if kubelet installed
+  stat:
+    path: "{{ kubelet_path }}"
+  register: result_c
+  tags: k8s
+
+- name: Check kubelet version
+  ansible.builtin.command: '{{ kubelet_path }} --version'
+  register: result_d
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: k8s
+
+# KUBEADM
+- name: Check if kubeadm installed
+  stat:
+    path: "{{ kubeadm_path }}"
+  register: result_e
+  tags: k8s
+
+- name: Check kubeadm version
+  ansible.builtin.command: '{{ kubeadm_path }} version'
+  register: result_f
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: k8s
+# Must check gpg added securely
+# also check tor and other requiring gpg
+# remember repo asking for gpg in command to replace 2 command below
+# sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+# echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+- name: Install kubectl
+  block:
+    - name: Add apt-key for kubectl
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add apt deb kubectl to source list
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        filename: kubectl
+        state: present
+
+    - name: Installing kubectl
+      apt:
+        name: kubectl
+      when: ansible_distribution is defined and ansible_distribution == 'Ubuntu'
+
+    - name: Enabled bash completion
+      ansible.builtin.shell: kubectl completion bash > /etc/bash_completion.d/kubectl
+  when: "not result_a.stat.exists or kubectl_target_version is not defined or kubectl_target_version not in result_b.stdout"
+  tags: k8s
+
+- name: Install kubelet
+  block:
+    - name: Add apt-key for kubelet
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add apt deb kubectl to source list
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        filename: kubelet
+        state: present
+
+    - name: Installing kubelet
+      apt:
+        name: kubelet
+      when: ansible_distribution is defined and ansible_distribution == 'Ubuntu'
+
+  when: "not result_c.stat.exists or kubelet_target_version is not defined or kubelet_target_version not in result_d.stdout"
+  tags: k8s
+
+- name: Install kubeadm
+  block:
+    - name: Add apt-key for kubeadm
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add apt deb kubeadm to source list
+      ansible.builtin.apt_repository:
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        filename: kubeadm
+        state: present
+
+    - name: Installing kubeadm
+      apt:
+        name: kubeadm
+      when: ansible_distribution is defined and ansible_distribution == 'Ubuntu'
+
+    - name: Enabled bash completion
+      ansible.builtin.shell: kubeadm completion bash > /etc/bash_completion.d/kubeadm
+  when: "not result_e.stat.exists or kubeadm_target_version is not defined or kubeadm_target_version not in result_f.stdout"
+  tags: k8s
+  # Must consider use apt-mark to hold version like 'sudo apt-mark hold kubelet kubeadm kubectl'

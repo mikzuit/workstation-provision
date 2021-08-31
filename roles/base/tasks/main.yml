@@ -1,0 +1,11 @@
+- name: debugging
+  debug: "{{ ansible_hostname }}"
+
+- name: Print all available facts
+  ansible.builtin.debug:
+    var: ansible_facts
+  tags: [ never, vars ]
+
+- include_tasks: tasks/software/screenfetch.yml
+
+- import_tasks: tasks/software/packages.yml

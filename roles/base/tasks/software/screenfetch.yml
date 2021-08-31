@@ -1,0 +1,39 @@
+- name: Check if screenfetch installed
+  stat:
+    path: "{{ screenfetch_path }}"
+  register: result_a
+  tags: screenfetch
+
+- name: Check screenfetch version
+  ansible.builtin.command: '{{ screenfetch_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: screenfetch
+
+- name: result_a printed
+  ansible.builtin.debug:
+    var: result_a
+    verbosity: 2
+
+- name: result_b printed
+  ansible.builtin.debug:
+    var: result_b
+    verbosity: 2
+
+- name: Install screenfetch
+  block:
+    - name: Install Screenfetch
+      apt:
+        name: screenfetch
+
+    - name: Update bashrc systemwide
+      lineinfile:
+        dest: /etc/bash.bashrc
+        backup: yes
+        line: "screenfetch -w -t"
+        regex: "^screenfetch"
+
+  when: "not result_a.stat.exists or screenfetch_target_version is not defined or screenfetch_target_version|string not in result_b.stdout"
+  tags: screenfetch

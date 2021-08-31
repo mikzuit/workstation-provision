@@ -1,0 +1,24 @@
+- name: Check if telegram installed
+  stat:
+    path: "{{ telegram_path }}"
+  register: result_a
+  tags: telegram
+
+- name: Check telegram version
+  ansible.builtin.command: 'snap find telegram-desktop'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: telegram
+
+- name: Install telegram
+  block:
+
+    - name: install telegram snap app
+      community.general.snap:
+        name: telegram-desktop
+      when: ansible_distribution == 'Ubuntu'
+
+  when: "not result_a.stat.exists or telegram_target_version is not defined or telegram_target_version not in result_b.stdout"
+  tags: telegram

@@ -1,0 +1,4 @@
+- name: Install wireshark with apt
+  apt:
+    name: wireshark
+  when: ansible_distribution == 'Ubuntu'

@@ -1,0 +1,4 @@
+- name: Installing Gparted
+  apt:
+    name: gparted
+  when: ansible_distribution == 'Ubuntu'

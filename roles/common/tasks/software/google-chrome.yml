@@ -1,0 +1,30 @@
+- name: Check if google chrome installed
+  stat:
+    path: "{{ googlechrome_path }}"
+  register: result_a
+  tags: googlechrome
+
+- name: Check google chrome version
+  ansible.builtin.command: '{{ googlechrome_path }} --version'
+  register: result_b
+  when: "result_a.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: googlechrome
+
+- name: Install or upgrade google-chrome if needed
+  block:
+  - name: Downloading google chrome with wget
+    get_url:
+      url: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      dest: /tmp/google-chrome-stable_current_amd64.deb
+
+  - name: Installing google chrome with apt-get
+    ansible.builtin.shell: apt install /tmp/google-chrome-stable_current_amd64.deb
+
+  - name: Removing google chrome tmp file
+    file:
+      path: /tmp/google-chrome-stable_current_amd64.deb
+      state: absent
+  when: "not result_a.stat.exists or googlechrome_target_version is not defined or googlechrome_target_version not in result_b.stdout"
+  tags: googlechrome

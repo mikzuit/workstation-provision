@@ -1,0 +1,32 @@
+- name: Check if vscode installed
+  stat:
+    path: "{{ vscode_path }}"
+  register: result_a
+  tags: vscode
+
+- name: Check vscode version
+  ansible.builtin.command: '{{ vscode_path }} --version'
+  when: "result_a.stat.exists"
+  register: result_b
+  changed_when: False
+  failed_when: False
+  tags: vscode
+
+- name: Install or upgrade vscode if needed
+  block:
+    - name: Add Microsoft key
+      ansible.builtin.apt_key:
+        url:  https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Add apt source list in a file
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable main
+        filename: vscode
+        state: present
+
+    - name: Install vscode with apt
+      apt:
+        name: code
+  when: "not result_a.stat.exists or vscode_target_version is not defined or vscode_target_version not in result_b.stdout"
+  tags: vscode

@@ -1,0 +1,27 @@
+- name: Install dependencies packages
+  apt:
+    name: [ 'dconf-cli', 'dconf-editor', 'python3-psutil']
+
+- name: Copy Wallpaper file
+  ansible.builtin.copy:
+    src: files/digital-digital-art-artwork-illustration-simple-hd-wallpaper-preview.jpg
+    dest: /usr/share/backgrounds/ansible-wallpaper.jpg
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Change Background image
+  become_user: "{{ ansible_user_id }}"
+  block:
+    - name: Set Wallpaper
+      community.general.dconf:
+        key:  "/org/gnome/desktop/background/picture-uri"
+        value: "'file:///usr/share/backgrounds/ansible-wallpaper.jpg'"
+        state: present
+
+    - name: Set Wallpaper position
+      community.general.dconf:
+        key: "/org/gnome/desktop/background/picture-options"
+        value: "'zoom'"
+        state: present
+  ignore_errors: no
